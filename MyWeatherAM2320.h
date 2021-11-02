@@ -8,7 +8,7 @@
 #include <Wire.h>
 #include <MySensors.h>
 #include <AM2320.h>
-#include "DataBuffer.h"
+#include <ArduinoProperty.h>
 
 class MyWeatherAM2320 {
 public:
