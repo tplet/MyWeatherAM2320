@@ -320,7 +320,7 @@ protected:
      *
      * @param char * message Log message (max 25 bytes). To confirm: 10 char max
      */
-    void sendLog(char * message)
+    void sendLog(const char * message)
     {
       MyMessage msg;
       msg.sender = getNodeId();
