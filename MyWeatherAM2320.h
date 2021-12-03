@@ -116,6 +116,7 @@ public:
         logMsg.concat(this->trySendTemp);
         logMsg.concat(")");
         this->sendLog(logMsg.c_str());
+        delete &logMsg;
         #endif
 
         // Send
@@ -157,6 +158,7 @@ public:
         logMsg.concat(this->trySendHum);
         logMsg.concat(")");
         this->sendLog(logMsg.c_str());
+        delete &logMsg;
         #endif
 
         // Send
@@ -278,7 +280,10 @@ protected:
         bool force = this->intervalSendForce->isOutdated();
 
         #ifdef MY_DEBUG
-        this->sendLog(String("Weather process: " + String(trigger || force ? "go" : "wait")).c_str());
+        String logMsg = F("Weather process");
+        logMsg.concat(trigger || force ? F("go") : F("wait"));
+        this->sendLog(logMsg.c_str());
+        delete &logMsg;
         #endif
         
         if (( trigger || force ) && this->readProbe()) {
