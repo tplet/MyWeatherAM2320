@@ -47,7 +47,9 @@ public:
     void presentation()
     {
         if (this->isEnable()) {
+            wait(100);
             present(this->childHumID, S_HUM, "Humidity", true);
+            wait(100);
             present(this->childTempID, S_TEMP, "Temperature", true);
         }
     }
