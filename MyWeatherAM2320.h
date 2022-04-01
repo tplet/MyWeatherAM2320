@@ -113,12 +113,11 @@ public:
     {
         this->trySendTemp++;
         
-        #ifdef MY_DEBUG
-        String logMsg = "Send humidity (try ";
-        logMsg.concat(this->trySendTemp);
-        logMsg.concat(")");
-        this->sendLog(logMsg.c_str());
-        delete &logMsg;
+        #if defined(MY_DEBUG) || defined(SERIAL_DEBUG)
+        this->logMsg = "Send humidity (try ";
+        this->logMsg.concat(this->trySendTemp);
+        this->logMsg.concat(")");
+        this->sendLog(this->logMsg.c_str());
         #endif
 
         // Send
@@ -155,12 +154,11 @@ public:
     {
         this->trySendHum++;
         
-        #ifdef MY_DEBUG
-        String logMsg = "Send humidity (try ";
-        logMsg.concat(this->trySendHum);
-        logMsg.concat(")");
-        this->sendLog(logMsg.c_str());
-        delete &logMsg;
+        #if defined(MY_DEBUG) || defined(SERIAL_DEBUG)
+        this->logMsg = "Send humidity (try ";
+        this->logMsg.concat(this->trySendHum);
+        this->logMsg.concat(")");
+        this->sendLog(this->logMsg.c_str());
         #endif
 
         // Send
@@ -247,7 +245,7 @@ protected:
     {
         // Try to read sensor
         if (!this->dht.measure()) {
-            #ifdef MY_DEBUG
+            #if defined(MY_DEBUG) || defined(SERIAL_DEBUG)
             this->sendLog(String("Failed read from AMT2320").c_str());
             int errorCode = this->dht.getErrorCode();
             switch (errorCode) {
@@ -264,7 +262,7 @@ protected:
             this->temperature = this->dht.getTemperature();
             this->humidity = this->dht.getHumidity();
 
-            #ifdef MY_DEBUG
+            #if defined(MY_DEBUG) || defined(SERIAL_DEBUG)
             this->sendLog(String("T: " + String(this->temperature) + "°C").c_str());
             this->sendLog(String("H: " + String(this->humidity) + "%").c_str());
             #endif
@@ -281,11 +279,11 @@ protected:
         bool trigger = this->intervalSend->isOutdated();
         bool force = this->intervalSendForce->isOutdated();
 
-        #ifdef MY_DEBUG
-        String logMsg = F("Weather process");
-        logMsg.concat(trigger || force ? F("go") : F("wait"));
-        this->sendLog(logMsg.c_str());
-        delete &logMsg;
+        #if defined(MY_DEBUG) || defined(SERIAL_DEBUG)
+        this->logMsg = "weather remain: ";
+        this->logMsg.concat(min(this->intervalSend->getRemain(), this->intervalSendForce->getRemain()));
+        this->logMsg.concat(" ms");
+        this->sendLog(this->logMsg.c_str());
         #endif
         
         if (( trigger || force ) && this->readProbe()) {
@@ -329,18 +327,27 @@ protected:
      */
     void sendLog(const char * message)
     {
-      MyMessage msg;
-      msg.sender = getNodeId();
-      msg.destination = GATEWAY_ADDRESS;
-      msg.sensor = NODE_SENSOR_ID;
-      msg.type = I_LOG_MESSAGE;
-      mSetCommand(msg, C_INTERNAL);
-      mSetRequestEcho(msg, true);
-      mSetEcho(msg, false);
+        #ifdef MY_DEBUG
+        MyMessage msg;
+        msg.sender = getNodeId();
+        msg.destination = GATEWAY_ADDRESS;
+        msg.sensor = NODE_SENSOR_ID;
+        msg.type = I_LOG_MESSAGE;
+        mSetCommand(msg, C_INTERNAL);
+        mSetRequestEcho(msg, true);
+        mSetEcho(msg, false);
 
-      msg.set(message);
+        msg.set(message);
 
-      _sendRoute(msg);
+        _sendRoute(msg);
+
+        // wait before sending another message
+        wait(100);
+        #endif
+
+        #ifdef SERIAL_DEBUG
+        Serial.println(message);
+        #endif
     }
 
     /*
@@ -412,6 +419,10 @@ protected:
      * Period for waiting DHT probe on init
      */
     unsigned long dhtSamplingPeriod = 2000;
+
+    #if defined(MY_DEBUG) || defined(SERIAL_DEBUG)
+    String logMsg;
+    #endif
 };
 
 #endif //COM_OSTERES_AUTOMATION_ARDUINO_COMPONENT_MYSENSOR_MYWEATHERAM2320_H
